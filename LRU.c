@@ -1,36 +1,43 @@
-#include <stdio.h>
+#include<stdio.h>
 
-void fifoPageReplacement(int pages[], int n, int capacity) {
+void pageReplacementLRU(int n, int pages[], int capacity) {
     int frames[capacity];
-    int front = 0;
-    int count = 0;
+    int recent[capacity];
     int pageFaults = 0;
 
-    // Initialize all frame slots as empty
     for (int i = 0; i < capacity; i++) {
         frames[i] = -1;
+        recent[i] = -1;
     }
 
-    printf("\nPage Replacement Process:\n");
     for (int i = 0; i < n; i++) {
         int page = pages[i];
         int found = 0;
 
-        // Check if the page is already in the frame
         for (int j = 0; j < capacity; j++) {
             if (frames[j] == page) {
                 found = 1;
+                recent[j] = i;
                 break;
             }
         }
 
-        // If the page is not found in frames, replace it
         if (!found) {
-            frames[front] = page;
-            front = (front + 1) % capacity;
+            int lruIndex = 0;
+            int leastRecent = recent[0];
+
+            for (int j = 1; j < capacity; j++) {
+                if (recent[j] < leastRecent) {
+                    leastRecent = recent[j];
+                    lruIndex = j;
+                }
+            }
+
+            frames[lruIndex] = page;
+            recent[lruIndex] = i;
             pageFaults++;
 
-            printf("Step %d: Page %d caused a page fault. Frames: [", count + 1, page);
+            printf("Step %d: Page %d caused a page fault. Frames: [", i + 1, page);
             for (int k = 0; k < capacity; k++) {
                 if (frames[k] != -1) {
                     printf("%d", frames[k]);
@@ -42,11 +49,12 @@ void fifoPageReplacement(int pages[], int n, int capacity) {
                 }
             }
             printf("]\n");
-            count++;
+        } else {
+            printf("Step %d: Page %d is already in the frame. No page fault.\n", i + 1, page);
         }
     }
 
-    printf("\nTotal Page Faults: %d\n", pageFaults);
+    printf("Total Page Faults: %d\n", pageFaults);
 }
 
 int main() {
@@ -64,7 +72,7 @@ int main() {
     printf("Enter the frame capacity: ");
     scanf("%d", &capacity);
 
-    fifoPageReplacement(pages, n, capacity);
+    pageReplacementLRU(n, pages, capacity);
 
     return 0;
 }
